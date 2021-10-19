@@ -25,9 +25,10 @@ function runSearch() {
             choices: [
                 "Find donor by blood type",
                 "Find recipent by blood type",
-                "Find donor by name",
+                "Find number of donors",
                 "Find recipent age within a specific range",
-                "Search for a specific donor id",
+                "Sort donors in alphabetical order",
+                "Sort recipents in alphabetical order",
                 "exit"
             ]
 
@@ -43,16 +44,20 @@ function runSearch() {
                     break;
 
 
-                case "Find donor by name":
+                case "Find number of donors":
                     donorSearch();
                     break;
 
                 case "Find recipent age within a specific range":
-                    rangeSearch();
+                    agerangeSearch();
                     break;
 
-                case "Search for a specific donor id":
-                    idSearch();
+                case "Sort donors in alphabetical order":
+                    alphabetizedonors();
+                    break;
+
+                    case "Sort recipents in alphabetical order":
+                    alphabetizerecipents();
                     break;
 
                 case "exit":
@@ -72,11 +77,11 @@ function donorbloodtypeSearch() {
             message: "What blood type would you like to search for?"
         })
         .then(function (answer) {
-            var query = "SELECT Donor_id, Donor_name, Donor_age FROM donor_db WHERE ?";
+            var query = "SELECT Donor_id, Donor_name, Donor_age, Donor_type FROM donor_db WHERE ?";
             connection.query(query, { Blood_type: answer.Blood_type }, function (err, res) {
                 if (err) throw err;
                 for (var i = 0; i < res.length; i++) {
-                    console.log("ID: " + res[i].Donor_id + " || Name: " + res[i].Donor_name + " || Age: " + res[i].Donor_age);
+                    console.log("ID: " + res[i].Donor_id + " || Name: " + res[i].Donor_name + " || Age: " + res[i].Donor_age + " || Type: " + res[i].Donor_type);
                 }
                 runSearch();
             });
@@ -102,24 +107,24 @@ function recipentbloodtypeSearch() {
         });
 }
 
-function multiSearch() {
-    var query = "SELECT artist FROM top5000 GROUP BY artist HAVING count(*) > 1";
+function donorSearch() {
+    var query = "SELECT COUNT(*) FROM donor_db";
     connection.query(query, function (err, res) {
         if (err) throw err;
         for (var i = 0; i < res.length; i++) {
-            console.log(res[i].artist);
+            console.log(res);
         }
         runSearch();
     });
 }
 
-function rangeSearch() {
+function agerangeSearch() {
     inquirer
         .prompt([
             {
                 name: "start",
                 type: "input",
-                message: "Enter starting position: ",
+                message: "Enter starting age: ",
                 validate: function (value) {
                     if (isNaN(value) === false) {
                         return true;
@@ -130,7 +135,7 @@ function rangeSearch() {
             {
                 name: "end",
                 type: "input",
-                message: "Enter ending position: ",
+                message: "Enter ending age: ",
                 validate: function (value) {
                     if (isNaN(value) === false) {
                         return true;
@@ -140,19 +145,13 @@ function rangeSearch() {
             }
         ])
         .then(function (answer) {
-            var query = "SELECT position,song,artist,year FROM top5000 WHERE position BETWEEN ? AND ?";
+            var query = "SELECT Recipent_id, Recipent_name, Blood_type, Recipent_age FROM recipent_db WHERE Recipent_age BETWEEN ? AND ?";
             connection.query(query, [answer.start, answer.end], function (err, res) {
                 if (err) throw err;
                 for (var i = 0; i < res.length; i++) {
                     console.log(
-                        "Position: " +
-                        res[i].position +
-                        " || Song: " +
-                        res[i].song +
-                        " || Artist: " +
-                        res[i].artist +
-                        " || Year: " +
-                        res[i].year
+                        "ID: " + res[i].Recipent_id + " || Name: " + res[i].Recipent_name + " || Blood Type: " + res[i].Blood_type
+                        + " || Age: " + res[i].Recipent_age
                     );
                 }
                 runSearch();
@@ -160,28 +159,32 @@ function rangeSearch() {
         });
 }
 
-function songSearch() {
+function alphabetizedonors() {
     inquirer
-        .prompt({
-            name: "song",
-            type: "input",
-            message: "What song would you like to look for?"
-        })
-        .then(function (answer) {
-            console.log(answer.song);
-            connection.query("SELECT * FROM top5000 WHERE ?", { song: answer.song }, function (err, res) {
-                if (err) throw err;
-                console.log(
-                    "Position: " +
-                    res[0].position +
-                    " || Song: " +
-                    res[0].song +
-                    " || Artist: " +
-                    res[0].artist +
-                    " || Year: " +
-                    res[0].year
-                );
-                runSearch();
-            });
-        });
+    var query = "SELECT * FROM donor_db ORDER BY donor_name";
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            console.log(res);
+        }
+        runSearch();
+    });
+
+
+
+
+}
+
+
+function alphabetizerecipents() {
+    inquirer
+    var query = "SELECT * FROM recipent_db ORDER BY recipent_name";
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            console.log(res);
+        }
+        runSearch();
+    });
+
 }
